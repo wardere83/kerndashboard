@@ -1,0 +1,34 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
+
+# Node / build output (only relevant if we add tooling later)
+node_modules/
+dist/
+build/
+.cache/
+.parcel-cache/
+.next/
+
+# Logs / env
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+.env
+.env.*
+!.env.example
+
+# Python (for any data-prep helpers)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Scratch
+/tmp/
+/scratch/

@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kern CCD · VR EEO Faculty Development & Peer Mentoring · Project Management Dashboard</title>
+  <meta name="description" content="Project management dashboard for the Kern Community College District VR EEO Faculty Development and Peer Mentoring Program (2026–2028 EEO IBP Tier 1 grant)." />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    /* ════════════════════════════════════════════════════════════════
+       KERN CCD BRAND — straight from the Kern CCD / CREL Style Guide.
+       Red #bc1823 · Light Grey #d9d9d9 · Dark Grey #545454
+       Black #000000 · Orange #ff914d
+       Display: Cambria (Source Serif 4 web fallback) ·
+       Body:   Calibri (Inter web fallback)
+       Visual language: Apple-minimalist neutral with red as a quiet accent.
+    ════════════════════════════════════════════════════════════════ */
+    :root {
+      --kccd-red:        #bc1823;
+      --kccd-red-deep:   #8b0f1a;
+      --kccd-red-soft:   #f5d4d7;
+      --kccd-orange:     #ff914d;
+      --kccd-grey-dark:  #545454;
+      --kccd-grey-light: #d9d9d9;
+      --kccd-black:      #000000;
+      --kccd-white:      #ffffff;
+
+      --bg:           #fbfbfd;
+      --bg-surface:   #ffffff;
+      --bg-surface-2: #f5f5f7;
+      --bg-card:      #ffffff;
+      --border:       #e5e5ea;
+      --border-strong:#d2d2d7;
+
+      --text-primary:   #1d1d1f;
+      --text-secondary: #424245;
+      --text-muted:     #6e6e73;
+      --text-on-dark:   #ffffff;
+
+      --accent:       var(--kccd-red);
+      --accent-hover: var(--kccd-red-deep);
+      --success:      #1a7a3c;
+      --warn:         var(--kccd-orange);
+      --danger:       var(--kccd-red);
+
+      --font-display: 'Cambria', 'Source Serif 4', Georgia, 'Times New Roman', serif;
+      --font-body:    'Calibri', 'Inter', Arial, 'Helvetica Neue', sans-serif;
+
+      --sidebar-w:    240px;
+      --header-h:     64px;
+      --mobile-nav-h: 60px;
+      --content-max:  1280px;
+      --radius:       14px;
+      --radius-lg:    16px;
+      --radius-md:    10px;
+
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.02);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+      --shadow-lg: 0 16px 48px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+
+      --transition: 180ms cubic-bezier(0.16,1,0.3,1);
+    }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    html { scroll-behavior:smooth; -webkit-text-size-adjust:none; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height:100dvh;
+      font-size:16px;
+      line-height:1.65;
+      -webkit-font-smoothing:antialiased;
+    }
+    img,svg { display:block; max-width:100%; }
+    button { cursor:pointer; background:none; border:none; font:inherit; color:inherit; -webkit-tap-highlight-color:transparent; }
+    a { color:inherit; text-decoration:none; }
+    table { border-collapse:collapse; width:100%; }
+    .app { display:flex; min-height:100dvh; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      position:fixed; left:0; top:0; height:100dvh; width:var(--sidebar-w);
+      background:var(--bg-surface); color:var(--text-primary);
+      display:flex; flex-direction:column; z-index:200;
+      overflow-y:auto; border-right:1px solid var(--border);
+      scrollbar-width:none;
+    }
+    .sidebar::-webkit-scrollbar { display:none; }
+    .sidebar-logo { padding:24px 20px 20px; border-bottom:1px solid var(--border); }
+    .logo-mark { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+    .logo-icon-wrap { width:34px; height:34px; background:var(--kccd-red); border-radius:8px; display:grid; place-items:center; flex-shrink:0; }
+    .logo-icon-wrap svg { color:#fff; }
+    .logo-title { font-family:var(--font-display); font-size:15px; font-weight:600; line-height:1.2; color:var(--text-primary); letter-spacing:-0.01em; }
+    .logo-sub { font-size:10px; color:var(--text-muted); letter-spacing:0.1em; text-transform:uppercase; margin-top:6px; }
+    .sidebar-section-label { font-size:10px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-muted); padding:18px 20px 6px; }
+    .nav-item { display:flex; align-items:center; gap:10px; padding:9px 20px; font-size:13.5px; font-weight:500; color:var(--text-secondary); border-left:2px solid transparent; transition:all var(--transition); width:100%; text-align:left; }
+    .nav-item:hover { background:var(--bg-surface-2); color:var(--text-primary); }
+    .nav-item.active { background:rgba(188,24,35,0.06); color:var(--kccd-red); border-left:2px solid var(--kccd-red); font-weight:600; }
+    .nav-item svg { flex-shrink:0; opacity:0.78; }
+    .nav-item.active svg { opacity:1; }
+    .sidebar-footer { margin-top:auto; padding:16px 20px; border-top:1px solid var(--border); }
+    .sidebar-footer-label { font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px; }
+    .sidebar-footer-val { font-size:12px; color:var(--text-secondary); }
+
+    /* ── MAIN ── */
+    .main { margin-left:var(--sidebar-w); flex:1; min-width:0; display:flex; flex-direction:column; height:100dvh; overflow:hidden; }
+    .topbar {
+      position:sticky; top:0;
+      background:rgba(255,255,255,0.85);
+      backdrop-filter:saturate(180%) blur(20px);
+      -webkit-backdrop-filter:saturate(180%) blur(20px);
+      border-bottom:1px solid var(--border);
+      height:var(--header-h);
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 32px; z-index:150; gap:16px; flex-shrink:0;
+    }
+    .topbar-left { display:flex; align-items:center; gap:12px; min-width:0; }
+    .topbar-title { font-family:var(--font-display); font-size:19px; font-weight:600; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; letter-spacing:-0.018em; }
+    .topbar-badge { background:var(--bg-surface-2); color:var(--kccd-red); font-size:10.5px; font-weight:600; padding:3px 10px; border-radius:20px; white-space:nowrap; letter-spacing:0.04em; border:1px solid var(--border); }
+    .topbar-right { display:flex; align-items:center; gap:8px; flex-shrink:0; font-size:12.5px; color:var(--text-muted); }
+    .hamburger-btn { display:none; width:38px; height:38px; border-radius:var(--radius-md); align-items:center; justify-content:center; color:var(--text-secondary); border:1px solid var(--border); background:var(--bg-surface); }
+
+    /* ── CONTENT ── */
+    .content { flex:1; padding:36px 40px; max-width:var(--content-max); width:100%; overflow-y:auto; overflow-x:hidden; }
+    .section { display:none; animation:fadeSlide 220ms ease; }
+    .section.active { display:block; }
+    @keyframes fadeSlide { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    .page-header { margin-bottom:28px; }
+    .page-header h2 { font-family:var(--font-display); font-size:32px; font-weight:600; color:var(--text-primary); line-height:1.15; letter-spacing:-0.025em; margin-bottom:6px; }
+    .page-header p { font-size:15px; color:var(--text-secondary); max-width:80ch; line-height:1.55; }
+
+    /* ── META BAR ── */
+    .project-meta { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px 22px; display:flex; flex-wrap:wrap; gap:28px; align-items:center; margin-bottom:24px; box-shadow:var(--shadow-sm); }
+    .project-meta-item { display:flex; flex-direction:column; gap:2px; }
+    .project-meta-item label { font-size:10px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); }
+    .project-meta-item span { font-size:14px; font-weight:600; color:var(--text-primary); }
+    .project-meta-item span.active { color:var(--kccd-red); }
+    .project-meta-divider { width:1px; height:32px; background:var(--border); }
+
+    /* ── KPI ROW ── */
+    .kpi-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-bottom:28px; }
+    .kpi-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px 22px; box-shadow:var(--shadow-sm); transition:all var(--transition); }
+    .kpi-card:hover { box-shadow:var(--shadow-md); transform:translateY(-1px); }
+    .kpi-label { font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:10px; }
+    .kpi-value { font-family:var(--font-display); font-size:32px; font-weight:600; line-height:1; margin-bottom:6px; letter-spacing:-0.028em; color:var(--text-primary); }
+    .kpi-sub { font-size:12.5px; color:var(--text-muted); line-height:1.35; }
+    .kpi-accent-bar { height:2px; border-radius:1px; margin-bottom:12px; background:var(--border); }
+    .kpi-accent-bar.red { background:var(--kccd-red); }
+    .kpi-accent-bar.grey-dark { background:var(--text-secondary); }
+    .kpi-accent-bar.grey-mid { background:var(--text-muted); }
+    .kpi-accent-bar.grey-soft { background:var(--border-strong); }
+
+    /* ── HIGHLIGHT BANNER ── */
+    .highlight-banner { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px 24px; display:flex; align-items:flex-start; gap:16px; margin-bottom:28px; box-shadow:var(--shadow-sm); }
+    .highlight-icon { width:38px; height:38px; background:rgba(188,24,35,0.08); border-radius:10px; display:grid; place-items:center; flex-shrink:0; }
+    .highlight-icon svg { color:var(--kccd-red); }
+    .highlight-text strong { display:block; font-size:13px; font-weight:600; color:var(--text-muted); margin-bottom:4px; letter-spacing:0.04em; text-transform:uppercase; }
+    .highlight-text p { font-size:14px; color:var(--text-primary); line-height:1.55; }
+
+    /* ── CARDS ── */
+    .card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); overflow:hidden; margin-bottom:20px; }
+    .card-header { padding:18px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:8px; background:var(--bg-surface); }
+    .card-title { font-family:var(--font-display); font-size:17px; font-weight:600; color:var(--text-primary); letter-spacing:-0.012em; }
+    .card-eyebrow { font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); }
+    .card-body { padding:24px; }
+
+    /* ── STACK LIST ── */
+    .stack-list { list-style:none; display:flex; flex-direction:column; gap:14px; }
+    .stack-item { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px 14px; box-shadow:var(--shadow-sm); transition:box-shadow var(--transition); }
+    .stack-item:hover { box-shadow:var(--shadow-md); }
+    .stack-item-head { display:flex; align-items:flex-start; gap:12px; margin-bottom:8px; }
+    .stack-num { width:30px; height:30px; border-radius:8px; background:var(--bg-surface-2); color:var(--text-primary); font-weight:600; font-size:13px; display:grid; place-items:center; flex-shrink:0; border:1px solid var(--border); }
+    .stack-title { font-weight:600; font-size:14.5px; color:var(--text-primary); line-height:1.4; flex:1; }
+    .stack-body { color:var(--text-secondary); font-size:13.5px; line-height:1.55; padding-left:44px; }
+    .stack-body strong { color:var(--text-primary); }
+
+    /* ── TIMELINE ── */
+    .timeline-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:20px; }
+    .timeline-year-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; box-shadow:var(--shadow-sm); }
+    .timeline-year-head { background:var(--bg-surface); color:var(--text-primary); padding:18px 22px 16px; display:flex; align-items:baseline; justify-content:space-between; gap:8px; border-bottom:1px solid var(--border); position:relative; }
+    .timeline-year-head::before { content:''; position:absolute; left:0; top:0; height:2px; width:100%; background:var(--text-secondary); }
+    .timeline-year-head h3 { font-family:var(--font-display); font-size:18px; font-weight:600; letter-spacing:-0.012em; }
+    .timeline-year-head .dates { font-size:12px; color:var(--text-muted); letter-spacing:0.02em; }
+    .timeline-year-head.accent::before { background:var(--kccd-red); }
+    .timeline-phase { padding:14px 22px; border-bottom:1px solid var(--border); }
+    .timeline-phase:last-child { border-bottom:none; }
+    .timeline-phase-when { font-size:10.5px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-muted); margin-bottom:6px; }
+    .timeline-phase-title { font-weight:600; font-size:14px; color:var(--text-primary); margin-bottom:4px; }
+    .timeline-phase-body { font-size:13.5px; color:var(--text-secondary); line-height:1.55; }
+
+    /* ── BUDGET ── */
+    .budget-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:28px; }
+    .budget-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; box-shadow:var(--shadow-sm); }
+    .budget-card-head { background:var(--bg-surface); padding:18px 22px 16px; display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid var(--border); position:relative; }
+    .budget-card-head::before { content:''; position:absolute; left:0; top:0; height:2px; width:100%; background:var(--text-secondary); }
+    .budget-card-head.accent::before { background:var(--kccd-red); }
+    .budget-card-name { font-family:var(--font-display); font-size:16px; font-weight:600; color:var(--text-primary); letter-spacing:-0.012em; }
+    .budget-card-dates { font-size:11.5px; color:var(--text-muted); }
+    .budget-card-total { font-size:13.5px; color:var(--text-primary); font-weight:700; white-space:nowrap; }
+    .budget-line { display:flex; justify-content:space-between; align-items:center; padding:11px 22px 4px; font-size:13.5px; gap:8px; }
+    .budget-line-label { color:var(--text-secondary); flex:1; }
+    .budget-line-amount { font-weight:600; color:var(--text-primary); white-space:nowrap; }
+    .budget-line-bar { height:3px; background:var(--bg-surface-2); border-radius:2px; overflow:hidden; margin:0 22px 10px; }
+    .budget-line-bar-fill { height:100%; background:var(--text-secondary); border-radius:2px; transition:width 0.6s ease; }
+    .budget-line.indirect-line .budget-line-label,
+    .budget-line.indirect-line .budget-line-amount { color:var(--text-primary); font-weight:600; }
+    .budget-line.indirect-line ~ .budget-line-bar .budget-line-bar-fill { background:var(--kccd-red); }
+    .budget-note { padding:12px 22px 16px; font-size:12.5px; color:var(--text-muted); border-top:1px dashed var(--border); margin-top:8px; }
+
+    /* ── CHART ── */
+    .chart-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px; box-shadow:var(--shadow-sm); margin-bottom:20px; }
+    .chart-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; gap:8px; }
+    .chart-title { font-family:var(--font-display); font-size:16px; font-weight:600; color:var(--text-primary); letter-spacing:-0.01em; }
+    .chart-label { font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-muted); }
+    .chart-wrap { position:relative; height:280px; }
+
+    /* ── DATA TABLE ── */
+    .data-table-wrap { overflow-x:auto; }
+    .data-table { width:100%; font-size:13px; }
+    .data-table th { font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-muted); padding:10px 16px; text-align:left; border-bottom:2px solid var(--border); white-space:nowrap; background:var(--bg-surface-2); }
+    .data-table td { padding:11px 16px; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .data-table tr:last-child td { border-bottom:none; }
+    .data-table tr:hover td { background:var(--bg-surface-2); }
+    .data-table .amount { font-weight:600; color:var(--text-primary); white-space:nowrap; }
+
+    /* ── COLLEGE PILLS ── */
+    .college-row { display:flex; flex-wrap:wrap; gap:10px; margin-top:8px; }
+    .college-pill { padding:6px 14px; background:var(--bg-surface); border:1px solid var(--border); border-radius:999px; font-size:12.5px; font-weight:500; color:var(--text-primary); display:inline-flex; align-items:center; gap:8px; }
+    .college-pill::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--kccd-red); }
+
+    /* ── PILLS / BADGES ── */
+    .pill-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:14px; font-size:11px; font-weight:600; white-space:nowrap; letter-spacing:0.02em; }
+    .progress-bar-wrap { background:var(--bg-surface-2); border-radius:3px; height:6px; overflow:hidden; }
+    .progress-bar-fill { height:100%; border-radius:3px; background:var(--text-primary); transition:width 0.6s ease; }
+
+    /* ── MOBILE NAV ── */
+    .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:150; }
+    .mobile-nav { display:none; position:fixed; bottom:0; left:0; right:0; height:var(--mobile-nav-h); background:rgba(255,255,255,0.94); backdrop-filter:saturate(180%) blur(20px); border-top:1px solid var(--border); z-index:300; padding:0 4px; overflow-x:auto; }
+    .mobile-nav-inner { display:flex; height:100%; min-width:max-content; }
+    .mobile-nav-btn { flex:1; min-width:72px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:var(--text-muted); font-size:9.5px; font-weight:600; padding:6px; }
+    .mobile-nav-btn.active { color:var(--kccd-red); }
+
+    /* ── responsive ── */
+    @media (max-width:1080px) { .kpi-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .timeline-grid,.budget-grid { grid-template-columns:1fr; } }
+    @media (max-width:900px) {
+      .sidebar { transform:translateX(-100%); transition:transform var(--transition); }
+      .sidebar.open { transform:translateX(0); box-shadow:var(--shadow-lg); }
+      .sidebar-overlay.open { display:block; }
+      .hamburger-btn { display:flex; }
+      .main { margin-left:0; height:auto; }
+      .content { padding:24px; padding-bottom:80px; }
+    }
+    @media (max-width:768px) {
+      .mobile-nav { display:flex; }
+      .topbar-title { font-size:16px; }
+      .project-meta { gap:14px; padding:14px 16px; }
+      .project-meta-divider { display:none; }
+    }
+    @media (max-width:480px) { .kpi-grid { grid-template-columns:1fr 1fr; } .kpi-value { font-size:22px; } .topbar-badge { display:none; } }
+
+    /* tabs */
+    .workplan-tabs { display:inline-flex; gap:0; margin-bottom:18px; flex-wrap:wrap; background:var(--bg-surface-2); border-radius:10px; padding:3px; border:1px solid var(--border); }
+    .workplan-tab { padding:7px 16px; border-radius:8px; font-size:13px; font-weight:500; background:transparent; color:var(--text-secondary); transition:all var(--transition); border:none; }
+    .workplan-tab:hover { color:var(--text-primary); }
+    .workplan-tab.active { background:var(--bg-surface); color:var(--text-primary); font-weight:600; box-shadow:var(--shadow-sm); }
+    .workplan-pane { display:none; }
+    .workplan-pane.active { display:block; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-icon-wrap">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-7"/></svg>
+        </div>
+        <div>
+          <div class="logo-title">Kern CCD</div>
+          <div class="logo-sub">Project Dashboard</div>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-section-label">Program</div>
+    <button class="nav-item active" data-section="overview">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Overview
+    </button>
+    <button class="nav-item" data-section="goals">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+      Goals & Objectives
+    </button>
+    <button class="nav-item" data-section="workplan">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Workplan & Timeline
+    </button>
+    <button class="nav-item" data-section="outcomes">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Outcomes & Metrics
+    </button>
+    <button class="nav-item" data-section="budget">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Budget Breakdown
+    </button>
+    <button class="nav-item" data-section="spend">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      Spend-Down Monitor
+    </button>
+    <div class="sidebar-footer">
+      <div class="sidebar-footer-label">Funding Cycle</div>
+      <div class="sidebar-footer-val">Jan 2026 – Jun 2028</div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- ── MAIN ── -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger-btn" id="hamburger" aria-label="Open menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <h1 class="topbar-title" id="topbar-title">Project Overview</h1>
+        <span class="topbar-badge">Tier 1</span>
+      </div>
+      <div class="topbar-right">
+        <span id="lastUpdated"></span>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- ════════ OVERVIEW ════════ -->
+      <section id="section-overview" class="section active">
+        <div class="page-header">
+          <h2>Project Overview</h2>
+          <p>A two-year VR-driven faculty development and peer mentoring initiative across Kern Community College District. Funded by the 2026–2028 EEO Innovation and Best Practices Tier 1 grant.</p>
+        </div>
+
+        <div class="project-meta">
+          <div class="project-meta-item"><label>Lead Institution</label><span>Kern Community College District</span></div>
+          <div class="project-meta-divider"></div>
+          <div class="project-meta-item"><label>Address</label><span>2100 Chester Avenue, Bakersfield, CA 93301</span></div>
+          <div class="project-meta-divider"></div>
+          <div class="project-meta-item"><label>Tier</label><span>Tier 1</span></div>
+          <div class="project-meta-divider"></div>
+          <div class="project-meta-item"><label>Funding Cycle</label><span>Jan 2026 – Jun 2028</span></div>
+          <div class="project-meta-divider"></div>
+          <div class="project-meta-item"><label>Status</label><span class="active">● Active</span></div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-accent-bar red"></div><div class="kpi-label">Total Budget</div><div class="kpi-value">$150,000</div><div class="kpi-sub">Two-year project</div></div>
+          <div class="kpi-card"><div class="kpi-accent-bar grey-dark"></div><div class="kpi-label">Year 1 Budget</div><div class="kpi-value">$122,638</div><div class="kpi-sub">Jan 2026 – Jun 2027</div></div>
+          <div class="kpi-card"><div class="kpi-accent-bar grey-mid"></div><div class="kpi-label">Year 2 Budget</div><div class="kpi-value">$27,362</div><div class="kpi-sub">Jul 2027 – Jun 2028</div></div>
+          <div class="kpi-card"><div class="kpi-accent-bar grey-soft"></div><div class="kpi-label">Indirect (7000)</div><div class="kpi-value">$7,496</div><div class="kpi-sub">5% of direct costs</div></div>
+        </div>
+
+        <div class="highlight-banner">
+          <div class="highlight-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+          <div class="highlight-text"><strong>Cross-college collaboration</strong><p>Three KCCD colleges participate in the program: Bakersfield College, Cerro Coso Community College, and Porterville College. Each contributes faculty leads and peer mentors.</p></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">Participating Colleges</div><div class="card-eyebrow">3 sites</div></div>
+          <div class="card-body">
+            <div class="college-row">
+              <span class="college-pill">Bakersfield College</span>
+              <span class="college-pill">Cerro Coso Community College</span>
+              <span class="college-pill">Porterville College</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════ GOALS ════════ -->
+      <section id="section-goals" class="section">
+        <div class="page-header">
+          <h2>Goals & Objectives</h2>
+          <p>Four program goals anchor the VR EEO Faculty Development initiative. Each goal pairs with measurable objectives tied to deliverables in the workplan.</p>
+        </div>
+        <ul class="stack-list">
+          <li class="stack-item">
+            <div class="stack-item-head"><div class="stack-num">1</div><div class="stack-title">Expand access to VR-driven pedagogy for KCCD faculty</div></div>
+            <div class="stack-body">Deploy 60 Meta Quest 3 VR headsets across the three colleges and run a 6-session VR pedagogy training series. Builds faculty fluency with immersive tools and reduces friction to classroom adoption.</div>
+          </li>
+          <li class="stack-item">
+            <div class="stack-item-head"><div class="stack-num">2</div><div class="stack-title">Build a sustainable faculty peer mentoring network</div></div>
+            <div class="stack-body">Pair experienced faculty with newer hires across the district. Quarterly peer mentor cohorts, with a focus on EEO-aligned recruitment and retention practices.</div>
+          </li>
+          <li class="stack-item">
+            <div class="stack-item-head"><div class="stack-num">3</div><div class="stack-title">Produce a shared catalog of district-wide VR lessons</div></div>
+            <div class="stack-body">Faculty contribute VR-based lessons to a shared catalog tagged by discipline and EEO competency. Catalog is published district-wide by end of Year 1.</div>
+          </li>
+          <li class="stack-item">
+            <div class="stack-item-head"><div class="stack-num">4</div><div class="stack-title">Disseminate findings and build long-term capacity</div></div>
+            <div class="stack-body">Year 2 emphasizes scaling: faculty-led Unity VR content creation training, public-facing case studies, and a partner playbook for adoption beyond KCCD.</div>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ════════ WORKPLAN ════════ -->
+      <section id="section-workplan" class="section">
+        <div class="page-header">
+          <h2>Workplan & Timeline</h2>
+          <p>Five phases over a two-year cycle. Y1 front-loads hardware and onboarding; Y2 emphasizes adoption, dissemination, and grant closeout.</p>
+        </div>
+
+        <div class="workplan-tabs">
+          <button class="workplan-tab active" data-pane="y1">Year 1</button>
+          <button class="workplan-tab" data-pane="y2">Year 2</button>
+          <button class="workplan-tab" data-pane="combined">Combined View</button>
+        </div>
+
+        <div class="workplan-pane active" data-pane="y1">
+          <div class="timeline-grid">
+            <div class="timeline-year-card">
+              <div class="timeline-year-head"><h3>Phase 1 — Infrastructure</h3><span class="dates">Jan – Apr 2026</span></div>
+              <div class="timeline-phase"><div class="timeline-phase-when">Procurement</div><div class="timeline-phase-title">VR hardware deployment</div><div class="timeline-phase-body">60 Meta Quest 3 headsets purchased, configured, and distributed across BC, Cerro Coso, and Porterville.</div></div>
+              <div class="timeline-phase"><div class="timeline-phase-when">Readiness</div><div class="timeline-phase-title">Faculty cohort selection</div><div class="timeline-phase-body">First-cohort faculty identified at each college; baseline survey administered.</div></div>
+            </div>
+            <div class="timeline-year-card">
+              <div class="timeline-year-head accent"><h3>Phase 2 — Implementation</h3><span class="dates">May 2026 – Jun 2027</span></div>
+              <div class="timeline-phase"><div class="timeline-phase-when">Training</div><div class="timeline-phase-title">6-session VR pedagogy series</div><div class="timeline-phase-body">Faculty cohorts move through a structured 6-session program; peer mentor pairs formalized.</div></div>
+              <div class="timeline-phase"><div class="timeline-phase-when">Content</div><div class="timeline-phase-title">VR lesson catalog v1</div><div class="timeline-phase-body">Faculty submit first-round VR lessons; lessons tagged and published to the shared catalog.</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="workplan-pane" data-pane="y2">
+          <div class="timeline-grid">
+            <div class="timeline-year-card">
+              <div class="timeline-year-head"><h3>Phase 3 — Reporting</h3><span class="dates">Jul 2027 – Apr 2028</span></div>
+              <div class="timeline-phase"><div class="timeline-phase-when">Accountability</div><div class="timeline-phase-title">Mid-grant reporting</div><div class="timeline-phase-body">Outcomes data collected; mid-grant report submitted to CCCCO.</div></div>
+            </div>
+            <div class="timeline-year-card">
+              <div class="timeline-year-head accent"><h3>Phase 4 & 5 — Scale and Closeout</h3><span class="dates">May – Aug 2028</span></div>
+              <div class="timeline-phase"><div class="timeline-phase-when">Advanced</div><div class="timeline-phase-title">Unity VR content creation training</div><div class="timeline-phase-body">Faculty produce Unity-based VR content; partner playbook drafted.</div></div>
+              <div class="timeline-phase"><div class="timeline-phase-when">Closeout</div><div class="timeline-phase-title">Final report and dissemination</div><div class="timeline-phase-body">Final outcomes report, public case studies, grant closeout submitted by 08/31/2028.</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="workplan-pane" data-pane="combined">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Five-Phase Roadmap</div><div class="card-eyebrow">Jan 2026 – Aug 2028</div></div>
+            <div class="card-body">
+              <ul class="stack-list">
+                <li class="stack-item"><div class="stack-item-head"><div class="stack-num">1</div><div class="stack-title">VR Infrastructure & Readiness</div></div><div class="stack-body">Hardware procurement, faculty cohort selection. <strong>Due: 04/30/2026.</strong></div></li>
+                <li class="stack-item"><div class="stack-item-head"><div class="stack-num">2</div><div class="stack-title">Implementation & Integration</div></div><div class="stack-body">VR pedagogy training, peer mentoring, lesson catalog v1. <strong>Due: 06/30/2027.</strong></div></li>
+                <li class="stack-item"><div class="stack-item-head"><div class="stack-num">3</div><div class="stack-title">Reporting & Accountability</div></div><div class="stack-body">Mid-grant outcomes report. <strong>Due: 04/30/2028.</strong></div></li>
+                <li class="stack-item"><div class="stack-item-head"><div class="stack-num">4</div><div class="stack-title">Advanced Execution</div></div><div class="stack-body">Unity content creation training, partner playbook. <strong>Due: 06/30/2028.</strong></div></li>
+                <li class="stack-item"><div class="stack-item-head"><div class="stack-num">5</div><div class="stack-title">Grant Closeout</div></div><div class="stack-body">Final report, dissemination, closeout package. <strong>Due: 08/31/2028.</strong></div></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════ OUTCOMES ════════ -->
+      <section id="section-outcomes" class="section">
+        <div class="page-header">
+          <h2>Outcomes & Metrics</h2>
+          <p>Measurable outcomes the program reports against. Targets are absolute; "n at end of Y2" assumes cumulative impact across all three colleges.</p>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Measurable Outcomes</div><div class="card-eyebrow">5 metrics</div></div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead><tr><th>#</th><th>Metric</th><th>Year 2 Target</th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td>Faculty completing the 6-session VR pedagogy series</td><td class="amount">≥ 45</td></tr>
+                <tr><td>2</td><td>Peer mentoring pairs active by end of Year 2</td><td class="amount">≥ 30</td></tr>
+                <tr><td>3</td><td>VR lessons published in the district catalog</td><td class="amount">≥ 60</td></tr>
+                <tr><td>4</td><td>Faculty trained in Unity VR content creation</td><td class="amount">≥ 12</td></tr>
+                <tr><td>5</td><td>Public-facing case studies produced</td><td class="amount">≥ 3</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════ BUDGET ════════ -->
+      <section id="section-budget" class="section">
+        <div class="page-header">
+          <h2>Budget Breakdown</h2>
+          <p>Total award $150,000 split across two budget years. Indirect line ($7,496) is 5% of direct costs ($142,504).</p>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-accent-bar red"></div><div class="kpi-label">Total Award</div><div class="kpi-value">$150,000</div><div class="kpi-sub">Tier 1 award</div></div>
+          <div class="kpi-card"><div class="kpi-accent-bar grey-dark"></div><div class="kpi-label">Direct Costs</div><div class="kpi-value">$142,504</div><div class="kpi-sub">95% of total</div></div>
+          <div class="kpi-card"><div class="kpi-accent-bar grey-mid"></div><div class="kpi-label">Indirect (7000)</div><div class="kpi-value">$7,496</div><div class="kpi-sub">5% of direct</div></div>
+          <div class="kpi-card"><div class="kpi-accent-bar grey-soft"></div><div class="kpi-label">Y1 / Y2 Split</div><div class="kpi-value">82% / 18%</div><div class="kpi-sub">Front-loaded for hardware</div></div>
+        </div>
+
+        <div class="budget-grid">
+          <div class="budget-card">
+            <div class="budget-card-head"><div><div class="budget-card-name">Year 1</div><div class="budget-card-dates">Jan 2026 – Jun 2027</div></div><div class="budget-card-total">$122,638</div></div>
+            <div class="budget-line"><span class="budget-line-label">1000 — Salaries</span><span class="budget-line-amount">$39,660</span></div>
+            <div class="budget-line-bar"><div class="budget-line-bar-fill" style="width:32%"></div></div>
+            <div class="budget-line"><span class="budget-line-label">3000 — Benefits</span><span class="budget-line-amount">$7,074</span></div>
+            <div class="budget-line-bar"><div class="budget-line-bar-fill" style="width:6%"></div></div>
+            <div class="budget-line"><span class="budget-line-label">4000 — Supplies & Equipment</span><span class="budget-line-amount">$63,808</span></div>
+            <div class="budget-line-bar"><div class="budget-line-bar-fill" style="width:52%"></div></div>
+            <div class="budget-line"><span class="budget-line-label">5000 — Services</span><span class="budget-line-amount">$5,832</span></div>
+            <div class="budget-line-bar"><div class="budget-line-bar-fill" style="width:5%"></div></div>
+            <div class="budget-line indirect-line"><span class="budget-line-label">7000 — Indirect</span><span class="budget-line-amount">$6,264</span></div>
+            <div class="budget-line-bar"><div class="budget-line-bar-fill" style="width:5%"></div></div>
+            <div class="budget-note">Y1 is hardware-heavy: 60 Meta Quest 3 headsets + peripherals dominate the 4000 line.</div>
+          </div>
+          <div class="budget-card">
+            <div class="budget-card-head accent"><div><div class="budget-card-name">Year 2</div><div class="budget-card-dates">Jul 2027 – Jun 2028</div></div><div class="budget-card-total">$27,362</div></div>
+            <div class="budget-line"><span class="budget-line-label">1000 — Salaries</span><span class="budget-line-amount">$0</span></div>
+            <div class="budget-line-bar"><div class="budget-line-bar-fill" style="width:0%"></div></div>
+            <div class="budget-line"><span class="budget-line-label">3000 — Benefits</span><span class="budget-line-amount">$0</span></div>
+            <div class="budget-line-bar"><div class="budget-line-bar-fill" style="width:0%"></div></div>
+            <div class="budget-line"><span class="budget-line-label">4000 — Supplies & Equipment</span><span class="budget-line-amount">$19,942</span></div>
+            <div class="budget-line-bar"><div class="budget-line-bar-fill" style="width:76%"></div></div>
+            <div class="budget-line"><span class="budget-line-label">5000 — Services</span><span class="budget-line-amount">$6,188</span></div>
+            <div class="budget-line-bar"><div class="budget-line-bar-fill" style="width:23%"></div></div>
+            <div class="budget-line indirect-line"><span class="budget-line-label">7000 — Indirect</span><span class="budget-line-amount">$1,232</span></div>
+            <div class="budget-line-bar"><div class="budget-line-bar-fill" style="width:5%"></div></div>
+            <div class="budget-note">Y2 emphasizes services (Unity training, dissemination) plus supplemental hardware.</div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header"><div class="chart-title">Expenditure by Object Code</div><div class="chart-label">Y1 vs Y2</div></div>
+          <div class="chart-wrap"><canvas id="budgetChart"></canvas></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">All Expenditures</div><div class="card-eyebrow">Total $150,000</div></div>
+          <div class="data-table-wrap"><table class="data-table" id="expenditureTable"></table></div>
+        </div>
+      </section>
+
+      <!-- ════════ SPEND-DOWN ════════ -->
+      <section id="section-spend" class="section">
+        <div class="page-header">
+          <h2>Spend-Down Monitor</h2>
+          <p>A simple view of how spending lines up with the project plan. Mark a year Off Track to surface it in the alerts panel.</p>
+        </div>
+
+        <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);">
+          <div class="kpi-card"><div class="kpi-accent-bar red"></div><div class="kpi-label">Total Budget</div><div class="kpi-value">$150,000</div><div class="kpi-sub">Across our 2-year cycle</div></div>
+          <div class="kpi-card"><div class="kpi-accent-bar grey-dark"></div><div class="kpi-label">Year 1 Budget</div><div class="kpi-value">$122,638</div><div class="kpi-sub">Jan 2026 – Jun 2027</div></div>
+          <div class="kpi-card"><div class="kpi-accent-bar grey-mid"></div><div class="kpi-label">Year 2 Budget</div><div class="kpi-value">$27,362</div><div class="kpi-sub">Jul 2027 – Jun 2028</div></div>
+        </div>
+
+        <div class="card" id="alert-card">
+          <div class="card-header"><div class="card-title">Project Pacing</div><span id="alert-badge" class="pill-badge" style="background:#1a7a3c;color:#fff;">On Track</span></div>
+          <div class="card-body">
+            <p style="font-size:13px;color:var(--text-secondary);margin:0 0 12px;line-height:1.55;">If a year is running behind or ahead of plan, flip its status to <strong>Off Track</strong> in the table. Anything marked off track surfaces here.</p>
+            <div id="alert-body"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">Year-by-Year View</div><div class="card-eyebrow">2-Year Cycle</div></div>
+          <div class="data-table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Period</th><th>Budget</th><th>Spent So Far</th><th>Spent %</th><th>Status</th></tr></thead>
+              <tbody id="spend-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ── MOBILE NAV ── -->
+<nav class="mobile-nav">
+  <div class="mobile-nav-inner">
+    <button class="mobile-nav-btn active" data-section="overview"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Overview</span></button>
+    <button class="mobile-nav-btn" data-section="goals"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/></svg><span>Goals</span></button>
+    <button class="mobile-nav-btn" data-section="workplan"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Workplan</span></button>
+    <button class="mobile-nav-btn" data-section="outcomes"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Outcomes</span></button>
+    <button class="mobile-nav-btn" data-section="budget"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>Budget</span></button>
+    <button class="mobile-nav-btn" data-section="spend"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg><span>Spend</span></button>
+  </div>
+</nav>
+
+<script>
+/* ── PROJECT DATA ── */
+const PROJECT = {
+  id: 'kern',
+  title: 'Kern CCD — VR EEO Faculty Development and Peer Mentoring Program',
+  funding: 150000,
+  yearlyBudget: { y1: 122638, y2: 27362 },
+};
+
+const SECTIONS = ['overview','goals','workplan','outcomes','budget','spend'];
+const SECTION_TITLES = {
+  overview: 'Project Overview',
+  goals: 'Goals & Objectives',
+  workplan: 'Workplan & Timeline',
+  outcomes: 'Outcomes & Metrics',
+  budget: 'Budget Breakdown',
+  spend: 'Spend-Down Monitor',
+};
+
+const EXPENDITURES = [
+  { year: 'Year 1', code: '1000', label: 'Faculty stipend – BC',                        amount: 13220 },
+  { year: 'Year 1', code: '1000', label: 'Faculty stipend – Cerro Coso',                amount: 13220 },
+  { year: 'Year 1', code: '1000', label: 'Faculty stipend – Porterville',               amount: 13220 },
+  { year: 'Year 1', code: '3000', label: 'Benefits @ 17.83% of 1000',                   amount: 7074  },
+  { year: 'Year 1', code: '4000', label: '60 Meta Quest 3 headsets',                    amount: 31200 },
+  { year: 'Year 1', code: '4000', label: 'VR-ready laptops and accessories',            amount: 18460 },
+  { year: 'Year 1', code: '4000', label: 'VR software licenses (Y1)',                   amount: 9648  },
+  { year: 'Year 1', code: '4000', label: 'Travel & supplies (training)',                amount: 4500  },
+  { year: 'Year 1', code: '5000', label: 'VR pedagogy consultant',                      amount: 4800  },
+  { year: 'Year 1', code: '5000', label: 'Catalog hosting & maintenance',               amount: 1032  },
+  { year: 'Year 1', code: '7000', label: 'Indirect @ 5% of Y1 direct',                  amount: 6264  },
+  { year: 'Year 2', code: '4000', label: 'Supplemental headsets + peripherals',         amount: 11742 },
+  { year: 'Year 2', code: '4000', label: 'Unity VR creator licenses',                   amount: 8200  },
+  { year: 'Year 2', code: '5000', label: 'Unity content creation training',             amount: 4200  },
+  { year: 'Year 2', code: '5000', label: 'Public case studies + dissemination',         amount: 1988  },
+  { year: 'Year 2', code: '7000', label: 'Indirect @ 5% of Y2 direct',                  amount: 1232  },
+];
+
+const fmt = n => '$' + Number(n).toLocaleString();
+
+/* ── NAVIGATION ── */
+function showSection(id){
+  SECTIONS.forEach(s => document.getElementById('section-' + s)?.classList.toggle('active', s === id));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.section === id));
+  document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.toggle('active', b.dataset.section === id));
+  document.getElementById('topbar-title').textContent = SECTION_TITLES[id] || 'Project';
+  document.getElementById('sidebar')?.classList.remove('open');
+  document.getElementById('sidebar-overlay')?.classList.remove('open');
+  if (id === 'budget') requestAnimationFrame(initBudgetChart);
+  if (location.hash !== '#' + id) history.replaceState(null, '', '#' + id);
+}
+document.querySelectorAll('[data-section]').forEach(b => {
+  b.addEventListener('click', () => showSection(b.dataset.section));
+});
+document.querySelectorAll('.workplan-tab').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.workplan-tab').forEach(x => x.classList.toggle('active', x === b));
+    document.querySelectorAll('.workplan-pane').forEach(x => x.classList.toggle('active', x.dataset.pane === b.dataset.pane));
+  });
+});
+document.getElementById('hamburger')?.addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+});
+document.getElementById('sidebar-overlay')?.addEventListener('click', () => {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+});
+
+/* ── EXPENDITURE TABLE ── */
+function renderExpenditureTable(){
+  const tbl = document.getElementById('expenditureTable');
+  if (!tbl) return;
+  const total = EXPENDITURES.reduce((a,e) => a + e.amount, 0);
+  tbl.innerHTML = `
+    <thead><tr><th>Year</th><th>Code</th><th>Item</th><th style="text-align:right;">Amount</th></tr></thead>
+    <tbody>
+      ${EXPENDITURES.map(e => `
+        <tr>
+          <td>${e.year}</td>
+          <td><span class="pill-badge" style="background:var(--bg-surface-2);color:var(--text-primary);border:1px solid var(--border);">${e.code}</span></td>
+          <td style="font-size:13px;color:var(--text-secondary);">${e.label}</td>
+          <td class="amount" style="text-align:right;">${fmt(e.amount)}</td>
+        </tr>`).join('')}
+      <tr style="background:var(--bg-surface-2);">
+        <td colspan="3"><strong>Total Award</strong></td>
+        <td class="amount" style="text-align:right;"><strong>${fmt(total)}</strong></td>
+      </tr>
+    </tbody>`;
+}
+
+/* ── BUDGET CHART ── */
+let budgetChart = null;
+function initBudgetChart(){
+  const c = document.getElementById('budgetChart');
+  if (!c) return;
+  if (budgetChart) { try { budgetChart.destroy(); } catch (_) {} budgetChart = null; }
+  const codes = ['1000','3000','4000','5000','7000'];
+  const codeLabels = {
+    '1000':'1000 — Salaries',
+    '3000':'3000 — Benefits',
+    '4000':'4000 — Supplies & Equipment',
+    '5000':'5000 — Services',
+    '7000':'7000 — Indirect',
+  };
+  const sumBy = (year, code) => EXPENDITURES.filter(e => e.year === year && e.code === code).reduce((a,e) => a + e.amount, 0);
+  const y1 = codes.map(c => sumBy('Year 1', c));
+  const y2 = codes.map(c => sumBy('Year 2', c));
+  budgetChart = new Chart(c, {
+    type: 'bar',
+    data: {
+      labels: codes.map(c => codeLabels[c]),
+      datasets: [
+        { label: 'Year 1', data: y1, backgroundColor: '#1d1d1f', borderRadius: 4 },
+        { label: 'Year 2', data: y2, backgroundColor: '#bc1823', borderRadius: 4 },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#1d1d1f', font: { family: "'Calibri', 'Inter', Arial, sans-serif", size: 13 }, padding: 14 } },
+        tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': $' + ctx.raw.toLocaleString() } },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#1d1d1f', font: { size: 11 } }, border: { color: 'transparent' } },
+        y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { color: '#1d1d1f', callback: v => '$' + (v/1000).toFixed(0) + 'K' }, border: { color: 'transparent' } },
+      },
+    },
+  });
+}
+
+/* ── SPEND-DOWN MONITOR ── */
+const STATE_KEY = 'kernPmdState.v1';
+function loadState(){ try { return JSON.parse(localStorage.getItem(STATE_KEY)) || {}; } catch(_) { return {}; } }
+function saveState(s){ try { localStorage.setItem(STATE_KEY, JSON.stringify(s)); } catch(_){} }
+function getStatus(period){ return loadState()[period] || 'on'; }
+function toggleStatus(btn, period){
+  const s = loadState();
+  s[period] = (s[period] === 'off') ? 'on' : 'off';
+  saveState(s);
+  renderSpendTable();
+  renderAlert();
+}
+function renderSpendTable(){
+  const tb = document.getElementById('spend-table-body');
+  if (!tb) return;
+  const rows = [
+    { period: 'Year 1', dates: 'Jan 2026 – Jun 2027', budget: PROJECT.yearlyBudget.y1, disbursed: 0 },
+    { period: 'Year 2', dates: 'Jul 2027 – Jun 2028', budget: PROJECT.yearlyBudget.y2, disbursed: 0 },
+  ];
+  tb.innerHTML = rows.map(r => {
+    const stat = getStatus(r.period);
+    const statColor = stat === 'off' ? '#c53030' : '#1a7a3c';
+    const pct = r.budget === 0 ? 0 : (r.disbursed / r.budget) * 100;
+    return `<tr>
+      <td><strong>${r.period}</strong><br><span style="font-size:11px;color:var(--text-muted)">${r.dates}</span></td>
+      <td class="amount">${fmt(r.budget)}</td>
+      <td class="amount" style="color:var(--text-muted);">${fmt(r.disbursed)}</td>
+      <td>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct.toFixed(1)}%;background:${pct === 0 ? 'var(--text-muted)' : 'var(--text-primary)'};"></div></div>
+        <span style="font-size:11px;color:var(--text-muted);">${pct.toFixed(1)}%</span>
+      </td>
+      <td><button onclick="toggleStatus(this,'${r.period}')" data-status="${stat}" class="pill-badge" style="background:${statColor};color:#fff;cursor:pointer;">${stat === 'off' ? 'Off Track' : 'On Track'}</button></td>
+    </tr>`;
+  }).join('');
+}
+function renderAlert(){
+  const flagged = ['Year 1','Year 2'].filter(p => getStatus(p) === 'off');
+  const badge = document.getElementById('alert-badge');
+  const body = document.getElementById('alert-body');
+  if (badge) {
+    badge.textContent = flagged.length === 0
+      ? 'On Track'
+      : flagged.length + (flagged.length === 1 ? ' year needs a look' : ' years need a look');
+    badge.style.background = flagged.length === 0 ? '#1a7a3c' : '#c53030';
+    badge.style.color = '#fff';
+  }
+  if (body) {
+    body.innerHTML = flagged.length === 0
+      ? '<div style="padding:8px 0;color:var(--success);font-weight:600;font-size:13.5px;">Everything looks good — no years are off track.</div>'
+      : flagged.map(p => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--border);">
+            <strong>${p}</strong>
+            <span class="pill-badge" style="background:#c53030;color:#fff;text-transform:uppercase;">Off Track</span>
+          </div>`).join('');
+  }
+}
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', () => {
+  renderExpenditureTable();
+  renderSpendTable();
+  renderAlert();
+  const now = new Date();
+  const opts = { year:'numeric', month:'short', day:'numeric' };
+  document.getElementById('lastUpdated').textContent = 'Updated ' + now.toLocaleDateString(undefined, opts);
+  const initial = (location.hash || '').replace('#','');
+  if (initial && SECTIONS.includes(initial)) showSection(initial);
+});
+</script>
+</body>
+</html>
